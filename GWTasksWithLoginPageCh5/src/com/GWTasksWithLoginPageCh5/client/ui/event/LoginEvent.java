@@ -1,5 +1,6 @@
-package com.GWTasksWithLoginPageCh5.client.events;
+package com.GWTasksWithLoginPageCh5.client.ui.event;
 
+import com.GWTasksWithLoginPageCh5.client.support.event.*;
 
 /**
  * Triggered when a user successfully logged in the application.

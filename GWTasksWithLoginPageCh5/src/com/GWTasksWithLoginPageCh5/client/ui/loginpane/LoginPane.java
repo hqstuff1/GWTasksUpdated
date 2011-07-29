@@ -1,9 +1,11 @@
-package com.GWTasksWithLoginPageCh5.client;
+package com.GWTasksWithLoginPageCh5.client.ui.loginpane;
 
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.GWTasksWithLoginPageCh5.client.events.*;
+import com.GWTasksWithLoginPageCh5.client.support.widget.*;
+import com.GWTasksWithLoginPageCh5.client.ui.Pane;
+import com.GWTasksWithLoginPageCh5.client.ui.event.LoginEvent;
 
 public class LoginPane extends Pane {
 

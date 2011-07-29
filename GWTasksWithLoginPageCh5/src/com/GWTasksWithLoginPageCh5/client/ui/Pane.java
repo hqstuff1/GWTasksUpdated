@@ -1,6 +1,7 @@
-package com.GWTasksWithLoginPageCh5.client.events;
+package com.GWTasksWithLoginPageCh5.client.ui;
 
 import com.google.gwt.user.client.ui.Composite;
+import com.GWTasksWithLoginPageCh5.client.support.event.*;
 
 /**
  * Serves as a base class for all panes in the application.

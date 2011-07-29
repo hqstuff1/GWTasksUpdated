@@ -1,4 +1,4 @@
-package com.GWTasksWithLoginPageCh5.client;
+package com.GWTasksWithLoginPageCh5.client.support.widget;
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.*;

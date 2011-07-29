@@ -1,6 +1,6 @@
 
 
-package com.GWTasksWithLoginPageCh5.client;
+package com.GWTasksWithLoginPageCh5.client.model;
 
 /**
  * A Task

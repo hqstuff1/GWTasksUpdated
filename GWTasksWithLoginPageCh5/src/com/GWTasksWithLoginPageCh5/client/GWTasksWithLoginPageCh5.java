@@ -3,9 +3,13 @@ package com.GWTasksWithLoginPageCh5.client;
 //start on page  134 -135, Beginning Google Web Toolkit from Novice to Professional
 
 
+import com.GWTasksWithLoginPageCh5.client.support.event.ApplicationEvent;
+import com.GWTasksWithLoginPageCh5.client.support.event.ApplicationEventListener;
+import com.GWTasksWithLoginPageCh5.client.ui.event.LoginEvent;
+import com.GWTasksWithLoginPageCh5.client.ui.loginpane.LoginPane;
+import com.GWTasksWithLoginPageCh5.client.ui.mainpane.MainPane;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.user.client.ui.*;
-import com.GWTasksWithLoginPageCh5.client.events.*;
 
 /**
  * The GWTasks application.

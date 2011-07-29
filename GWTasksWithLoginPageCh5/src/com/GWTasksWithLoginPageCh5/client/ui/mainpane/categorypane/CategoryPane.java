@@ -1,11 +1,14 @@
 
-package com.GWTasksWithLoginPageCh5.client;
+package com.GWTasksWithLoginPageCh5.client.ui.mainpane.categorypane;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
+import com.GWTasksWithLoginPageCh5.client.model.*;
 
 import java.util.*;
+import com.GWTasksWithLoginPageCh5.client.support.widget.*;
+import com.GWTasksWithLoginPageCh5.client.ui.mainpane.taskpane.TaskPane;
 
 /**
  * @author 

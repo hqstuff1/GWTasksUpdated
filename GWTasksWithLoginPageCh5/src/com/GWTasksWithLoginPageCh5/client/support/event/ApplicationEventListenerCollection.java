@@ -1,4 +1,4 @@
-package com.GWTasksWithLoginPageCh5.client.events;
+package com.GWTasksWithLoginPageCh5.client.support.event;
 
 import java.util.ArrayList;
 

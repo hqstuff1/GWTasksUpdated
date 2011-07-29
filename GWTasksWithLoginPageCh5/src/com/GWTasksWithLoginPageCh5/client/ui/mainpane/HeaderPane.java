@@ -1,6 +1,6 @@
 
 
-package com.GWTasksWithLoginPageCh5.client;
+package com.GWTasksWithLoginPageCh5.client.ui.mainpane;
 
 import com.google.gwt.user.client.ui.*;
 

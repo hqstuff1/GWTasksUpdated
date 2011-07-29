@@ -1,4 +1,4 @@
-package com.GWTasksWithLoginPageCh5.client.events;
+package com.GWTasksWithLoginPageCh5.client.support.event;
 
 /**
  * Represents a source by which application events can be fired. 

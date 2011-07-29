@@ -1,5 +1,7 @@
-package com.GWTasksWithLoginPageCh5.client;
+package com.GWTasksWithLoginPageCh5.client.ui.mainpane;
 
+import com.GWTasksWithLoginPageCh5.client.ui.mainpane.categorypane.CategoryPane;
+import com.GWTasksWithLoginPageCh5.client.ui.mainpane.taskpane.TaskPane;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DockPanel;
 

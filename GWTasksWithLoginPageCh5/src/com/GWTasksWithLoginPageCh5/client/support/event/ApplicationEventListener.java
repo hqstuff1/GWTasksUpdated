@@ -1,4 +1,4 @@
-package com.GWTasksWithLoginPageCh5.client.events;
+package com.GWTasksWithLoginPageCh5.client.support.event;
 
 /**
  * A listener that listens and is able to handle {@link ApplicationEvent application events}.
