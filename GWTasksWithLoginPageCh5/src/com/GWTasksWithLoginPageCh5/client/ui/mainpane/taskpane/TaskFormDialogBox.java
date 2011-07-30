@@ -4,11 +4,10 @@ package com.GWTasksWithLoginPageCh5.client.ui.mainpane.taskpane;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
+import com.GWTasksWithLoginPageCh5.client.manager.data.DataManager;
 import com.GWTasksWithLoginPageCh5.client.model.*;
+import com.GWTasksWithLoginPageCh5.client.support.async.Callback;
 
-/**
- * @author 
- */
 public class TaskFormDialogBox extends DialogBox {
 
 	private final static String ERROR_IMAGE_URL = "image/field-error.gif";
@@ -22,21 +21,26 @@ public class TaskFormDialogBox extends DialogBox {
 
     private final Task task;
     private final TaskPane taskPane;
+    private final DataManager dataManager;
+    private final boolean editMode;
 
-    public TaskFormDialogBox(TaskPane taskPane) {
-        this(taskPane, new Task(), false);
+    public TaskFormDialogBox(TaskPane taskPane, DataManager dataManager) {
+        this(taskPane, new Task(), dataManager, false);
     }
 
-    public TaskFormDialogBox(TaskPane taskPane, Task task) {
-        this(taskPane, task, true);
+    public TaskFormDialogBox(TaskPane taskPane, Task task, DataManager dataManager) {
+        this(taskPane, task, dataManager, true);
     }
 
-    private TaskFormDialogBox(TaskPane taskPane, Task task, boolean editMode) {
+    private TaskFormDialogBox(TaskPane taskPane, Task task, DataManager dataManager, boolean editMode) {
         super(false, true);
-        setText("Task Form");
         this.task = task;
 		this.taskPane = taskPane;
-		
+		this.dataManager = dataManager;
+        this.editMode = editMode;
+
+        setText("Task Form");
+
         VerticalPanel main = new VerticalPanel();
         main.add(new Label("Title"));
         addGap(main, "3px");
@@ -77,23 +81,25 @@ public class TaskFormDialogBox extends DialogBox {
 
         HorizontalPanel buttons = new HorizontalPanel();
         submitButton = new Button(editMode ? "Edit" : "Add");
-        submitButton.addClickHandler(new ClickHandler()
+        submitButton.addClickHandler(new ClickHandler() 
         {	
+			@Override
+			public void onClick(ClickEvent event)
+			{
+				handleSubmit();
+			}
+		});
+        
+        cancelButton = new Button("Cancel");
+        cancelButton.addClickHandler(new ClickHandler()
+        {
 			@Override
 			public void onClick(ClickEvent event) 
 			{
-				 handleSubmit();
-			}
-		});
-        
-        cancelButton = new Button("Cancel", new ClickHandler()
-        {	
-			@Override
-			public void onClick(ClickEvent event) {
 				handleCancel();
 			}
 		});
-        
+  
         buttons.add(submitButton);
         addGap(buttons, "5px");
         buttons.add(cancelButton);
@@ -116,9 +122,30 @@ public class TaskFormDialogBox extends DialogBox {
             task.setTitle(titleField.getText().trim());
             task.setPriority(resolveSelectedPriority());
             task.setDescription(descriptionField.getText().trim());
-            taskPane.addTask(task);
-            hide();
+            if (editMode) {
+                handleUpdate(task);
+            } else {
+                handleCreate(task);
+            }
         }
+    }
+
+    protected void handleCreate(Task task) {
+        dataManager.createTask(task, taskPane.getCurrentCategory().getId(), new Callback<Task>() {
+            public void onSuccess(Task task) {
+                taskPane.addTask(task);
+                hide();
+            }
+        });
+    }
+
+    protected void handleUpdate(Task task) {
+        dataManager.updateTask(task, new Callback<Void>() {
+                public void onSuccess(Void result) {
+                    taskPane.reloadTasks();
+                    hide();
+                }
+            });
     }
 
     protected void handleCancel() {

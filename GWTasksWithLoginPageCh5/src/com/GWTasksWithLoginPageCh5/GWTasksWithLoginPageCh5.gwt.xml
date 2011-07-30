@@ -16,8 +16,9 @@
 
   <!-- Specify the app entry point class.                         -->
 
-  <stylesheet src='GWTasksWithLoginPageCh5.css' />
+ 
   <entry-point class="com.GWTasksWithLoginPageCh5.client.GWTasksWithLoginPageCh5"/>
   
-
+ <stylesheet src='GWTasksWithLoginPageCh5.css' />
+ 
 </module>

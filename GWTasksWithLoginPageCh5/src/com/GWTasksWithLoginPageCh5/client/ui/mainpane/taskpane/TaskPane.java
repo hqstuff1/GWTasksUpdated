@@ -5,25 +5,38 @@ package com.GWTasksWithLoginPageCh5.client.ui.mainpane.taskpane;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
+import com.GWTasksWithLoginPageCh5.client.manager.ManagerRegistry;
 import com.GWTasksWithLoginPageCh5.client.model.*;
+import com.GWTasksWithLoginPageCh5.client.support.async.Callback;
 import com.GWTasksWithLoginPageCh5.client.support.widget.*;
+import com.GWTasksWithLoginPageCh5.client.ui.Pane;
+import com.GWTasksWithLoginPageCh5.client.ui.event.TaskSelectionEvent;
 
 import java.util.*;
 
 /**
+ * A {@link Pane} showing a list of all the tasks for a chosen category. It allows adding/removing tasks as well
+ * as un/selecting them.
+ *
  * @author 
  */
-public class TaskPane extends Composite {
+public class TaskPane extends Pane {
 
 	private final FlexTable taskTable;
+	private PushButton addButton;
+	private PushButton removeButton;
 	private int selectedRow = -1;
 	private Task selectedTask;
 	private Category category;
-	private PushButton addButton;
-	private PushButton removeButton;
-		
-	public TaskPane() {
-	
+
+    /**
+     * Constructs a new TaskPane with a given manager registry.
+     *
+     * @param managerRegistry The manager registry to associate with this pane.
+     */	
+	public TaskPane(ManagerRegistry managerRegistry) {
+	    super(managerRegistry);
+
 		taskTable = new FlexTable();
 		taskTable.getColumnFormatter().setWidth(0, "20px");
 		taskTable.getColumnFormatter().setWidth(1, "20px");
@@ -48,13 +61,13 @@ public class TaskPane extends Composite {
 		TitledPanel titledPanel = new TitledPanel("Tasks", taskTable);
 		titledPanel.setContentVerticalAlignment(HasVerticalAlignment.ALIGN_TOP);
 		titledPanel.setSize("100%", "100%");
-		
+				
 		addButton = titledPanel.addToolButton("+", "Add Task", new ClickHandler() 
 		{
 			@Override
 			public void onClick(ClickEvent event) 
 			{
-				TaskFormDialogBox dialog = new TaskFormDialogBox(TaskPane.this);
+				TaskFormDialogBox dialog = new TaskFormDialogBox(TaskPane.this, getManagerRegistry().getDataManager());
 				dialog.center();
 				dialog.show();	
 			}
@@ -66,112 +79,155 @@ public class TaskPane extends Composite {
 			@Override
 			public void onClick(ClickEvent event) 
 			{
-				if (selectedRow != -1) {
-					// removing selectedTask
-					selectedRow = -1;
-					selectedTask = null;
-					removeButton.setEnabled(false);
-					reset(category);
-				}
+				if (selectedRow == -1) 
+				{
+                    return;
+                }
+                getManagerRegistry().getDataManager().removeTask(selectedTask.getId(), new Callback<Void>() 
+                {
+                    public void onSuccess(Void result) 
+                    {
+                        selectedRow = -1;
+                        selectedTask = null;
+                        removeButton.setEnabled(false);
+                        reset(category);
+                    }
+                });
 			}
 		});
 		removeButton.setEnabled(false);
 		
-		initWidget(titledPanel);
+	    SimplePanel mainPanel = new SimplePanel();
+        mainPanel.setWidget(titledPanel);
+		initWidget(mainPanel);
+        setStyleName("TaskPane");
 	}
-	
-	/**
-	 * reset the viewed task list to show only the tasks
-of the given category, or no tasks at all if the category is null.
-	 */
+
+    /**
+     * Reloads the the current tasks based on the currently associated category. If the associated category is
+     * <code>null</code>, this call has the same effect as calling <code>reset(getCurrentCategory())</code>.
+     */
+    public void reloadTasks() {
+        reset(category);
+    }
+
+    /**
+     * Resets this pane, that is, removing its current category association and the displayed tasks.
+     */
 	public void reset() {
 		reset(null);
 	}
-	
-	public void reset(Category category) {
+
+    /**
+     * Resets this pane to be associated with the given category and displays all its tasks. If the given category
+     * is <code>null</code> all currently displayed tasks will be removed.
+     *
+     * @param category The newly associated category.
+     */
+    public void reset(Category category) {
 		while (taskTable.getRowCount() > 1) {
 			taskTable.removeRow(taskTable.getRowCount()-1);
 		}
 		this.category = category;
-		if (category != null) {
-			List<Task> tasks = getTasksForCategory(category);
-			for (Task task : tasks) {
-				addTask(task);
-			}
-			addButton.setEnabled(true);
-		}
+		if (category == null) {
+            return;
+        }
+        getManagerRegistry().getDataManager().getTasks(category.getId(), new Callback<List<Task>>() {
+            public void onSuccess(List<Task> tasks) {
+                for (Task task : tasks) {
+                    addTask(task);
+                }
+                addButton.setEnabled(true);
+            }
+        });
 	}
 
-	
+    /**
+     * Returns the currently associated category, that is, the category whose tasks should be displayed.
+     *
+     * @return The currently category associated with this pane.
+     */
+    public Category getCurrentCategory() {
+        return category;
+    }
 	
 	//=========================================== Helper Methods =======================================================
-	
+
+    /**
+     * Adds a task to the tasks list.
+     *
+     * @param task The task to be added.
+     */
 	protected void addTask(final Task task) {
 		final int row = taskTable.getRowCount();
-		taskTable.setWidget(row, 0, new CheckBox());
-		String priorityName = task.getPriority().name();
+        final CheckBox checkBox = new CheckBox();
+        checkBox.setValue(task.isClosed(), false);
+
+        checkBox.addClickHandler(new ClickHandler()
+        {
+			@Override
+			public void onClick(ClickEvent event) 
+			{
+				handleTaskClose(task, checkBox, row);
+			}
+		});
+        
+        taskTable.setWidget(row, 0, checkBox);
+        String priorityName = task.getPriority().name();
 		Label priorityLabel = new Label(priorityName.substring(0, 1));
 		Label titleLabel = new Label(task.getTitle());
 		titleLabel.setStyleName("TaskRow");
-		titleLabel.addClickHandler(new ClickHandler() 
+		titleLabel.addClickHandler(new ClickHandler()
 		{
-			
 			@Override
 			public void onClick(ClickEvent event) 
 			{
 				handleTaskRowClicked(row, task);
 			}
 		});
+		
 		priorityLabel.setStyleName("PriorityLabel-" + priorityName.toLowerCase());
 		taskTable.setWidget(row, 1, priorityLabel);
 		taskTable.setWidget(row, 2, titleLabel);
 	}
-	
+
+    protected void handleTaskClose(final Task task, final CheckBox checkBox, final int row) {
+		task.setClosed(checkBox.getValue() );//checkBox.isChecked()) - deprecated;
+		getManagerRegistry().getDataManager().updateTask(task, new Callback<Void>() {
+			public void onSuccess(Void result) {
+                if (checkBox.getValue()) {
+                    taskTable.getRowFormatter().addStyleName(row, "TaskRow-disabled");
+                } else {
+                    taskTable.getRowFormatter().removeStyleName(row, "TaskRow-disabled");
+                }
+			}
+			public void onFailure(Throwable caught) 
+			{
+				checkBox.setValue(!checkBox.getValue());
+			}
+		});
+	}
+
 	protected void handleTaskRowClicked(int row, Task task) {
 		HTMLTable.RowFormatter rowFormatter = taskTable.getRowFormatter();
 		if (selectedRow == row) {
 			selectedRow = -1;
 			selectedTask = null;
 			rowFormatter.removeStyleName(row, "TaskRow-selected");
-			removeButton.setEnabled(false);
+            removeButton.setEnabled(false);
+            fireEvent(new TaskSelectionEvent(this, null));
 		} else {
 			if (selectedRow != -1) {
 				rowFormatter.removeStyleName(selectedRow, "TaskRow-selected");
 				removeButton.setEnabled(false);
+                fireEvent(new TaskSelectionEvent(this, null));
 			}
 			selectedRow = row;
 			selectedTask = task;
 			taskTable.getRowFormatter().addStyleName(row, "TaskRow-selected");
 			removeButton.setEnabled(true);
+            fireEvent(new TaskSelectionEvent(this, task));
 		}
-	}
-	
-	protected List<Task> getTasksForCategory(Category category) {
-		List<Task> tasks = new ArrayList<Task>();
-		if (category == null) {
-			return tasks;
-		}
-		if (category.getId() == 1L) {
-			tasks.add(new Task(1L, "Bread", "1xwhite and 2xdark"));
-			tasks.add(new Task(2L, "vegetables", "Tomatoes, Cucumbers and Lettuce"));
-			tasks.add(new Task(3L, "Fruits", "Apples, Pears, Melon and Mango"));
-			tasks.add(new Task(4L, "Milk", "2xnormal and 1xsoya"));
-			return tasks;
-		}
-		if (category.getId() == 2L) {
-			tasks.add(new Task(5L, "Contact project manager", "Discuss the status of the project"));
-			tasks.add(new Task(6L, "Email HR manager", "Ask for vacation on December"));
-			tasks.add(new Task(7L, "Setup meeting with client", "Discuss the progress of the project"));
-			return tasks;
-		}
-		if (category.getId() == 3L) {
-			tasks.add(new Task(8L, "Vacuum clean the house", Task.Priority.LOW));
-			tasks.add(new Task(9L, "Pick up the kids from school", "At 15:00"));
-			tasks.add(new Task(10L, "Arrange babysitter", "For the upcoming weekend"));
-			return tasks;
-		}
-		
-		return tasks;
 	}
 
 }

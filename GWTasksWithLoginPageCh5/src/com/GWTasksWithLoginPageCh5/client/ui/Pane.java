@@ -1,6 +1,7 @@
 package com.GWTasksWithLoginPageCh5.client.ui;
 
 import com.google.gwt.user.client.ui.Composite;
+import com.GWTasksWithLoginPageCh5.client.manager.ManagerRegistry;
 import com.GWTasksWithLoginPageCh5.client.support.event.*;
 
 /**
@@ -11,12 +12,14 @@ import com.GWTasksWithLoginPageCh5.client.support.event.*;
 public abstract class Pane extends Composite implements ApplicationEventSource {
 
     private final ApplicationEventListenerCollection listeners;
-
+    private final ManagerRegistry managerRegistry;
+    
     /**
      * Constructs a new Pane.
      */
-    protected Pane() {
+    protected Pane(ManagerRegistry managerRegistry) {
         listeners = new ApplicationEventListenerCollection();
+        this.managerRegistry = managerRegistry;
     }
 
     /**
@@ -49,5 +52,13 @@ public abstract class Pane extends Composite implements ApplicationEventSource {
         listeners.fireEvent(event);
     }
 
+    /**
+     * Returns the manager registry associated with this pane.
+     *
+     * @return The manager registry associated with this pane.
+     */
+    protected ManagerRegistry getManagerRegistry() {
+        return managerRegistry;
+    }
 }
 

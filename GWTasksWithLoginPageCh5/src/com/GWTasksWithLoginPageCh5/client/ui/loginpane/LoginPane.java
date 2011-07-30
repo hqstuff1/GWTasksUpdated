@@ -3,9 +3,16 @@ package com.GWTasksWithLoginPageCh5.client.ui.loginpane;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.GWTasksWithLoginPageCh5.client.manager.ManagerRegistry;
+import com.GWTasksWithLoginPageCh5.client.manager.security.Authentication;
+import com.GWTasksWithLoginPageCh5.client.manager.security.AuthenticationException;
+import com.GWTasksWithLoginPageCh5.client.model.Account;
+import com.GWTasksWithLoginPageCh5.client.support.async.Callback;
 import com.GWTasksWithLoginPageCh5.client.support.widget.*;
 import com.GWTasksWithLoginPageCh5.client.ui.Pane;
 import com.GWTasksWithLoginPageCh5.client.ui.event.LoginEvent;
+import com.GWTasksWithLoginPageCh5.client.ui.loginpane.RegistrationFormDialogBox;
+import com.GWTasksWithLoginPageCh5.client.manager.security.MySecurityManager;
 
 public class LoginPane extends Pane {
 
@@ -13,9 +20,14 @@ public class LoginPane extends Pane {
     private final TextBox usernameField;
     private final PasswordTextBox passwordField;
 
-	// private final GWTasksWithLoginPageCh5 gwtasks;
-	
-    public LoginPane() {
+    /**
+     * Constructs a new LoginPane with a given manager registry.
+     *
+     * @param managerRegistry The manager registry to associated with this pane.
+     */
+    public LoginPane(ManagerRegistry managerRegistry) 
+    {
+        super(managerRegistry);
         
         VerticalPanel content = new VerticalPanel();
         content.setSize("100%", "100%");
@@ -81,22 +93,26 @@ public class LoginPane extends Pane {
 		clearMessage();
 		String username = usernameField.getText().trim();
 		String password = passwordField.getText().trim();
-		if (authenticate(username, password)) {
-            fireEvent(new LoginEvent(this, username)); //replaced: gwtasks.showMainPane();
-        } else {
-            showErrorMessage("Invalid username and/or password");
-            passwordField.setText("");
-        }
+        Authentication authentication = new Authentication(username, password);
+        ((MySecurityManager) getManagerRegistry().getSecurityManager()).login(authentication, new Callback<Account>() {
+            public void onSuccess(Account account) {
+                clearMessage();
+                fireEvent(new LoginEvent(LoginPane.this, account.getUsername()));
+            }
+
+            public void onFailure(Throwable caught) {
+                if (caught instanceof AuthenticationException) {
+                    showErrorMessage("Invalid username and/or password");
+                    passwordField.setText("");
+                } else {
+                    super.onFailure(caught);
+                }
+            }
+        });
 	}
 
-    protected boolean authenticate(String username, String password) {
-        clearMessage();
-        // authenticate the user
-        return true;
-    }
-
     protected void handleRegister() {
-    	RegistrationFormDialogBox dialog = new RegistrationFormDialogBox(this);
+    	RegistrationFormDialogBox dialog = new RegistrationFormDialogBox(this,(MySecurityManager)getManagerRegistry().getSecurityManager());
     	dialog.center();
     	dialog.show();
     }
@@ -122,6 +138,5 @@ public class LoginPane extends Pane {
         messageLabel.setText(message);
         messageLabel.setVisible(true);
     }
-
 
 }

@@ -48,6 +48,20 @@ public class Category {
 		children = new ArrayList<Category>();
 	}
 	
+	   /**
+     * Copy constructor.
+     *
+     * @param category The category based on which this category will be created and initialized.
+     */
+    public Category(Category category) 
+    {
+        this(category.getId(), category.getName(), category.getDescription());
+        for (Category child : category.getChildren()) 
+        {
+            addChildCategory(new Category(child));
+        }
+    }
+	
 	/**
 	 * Returns the id of this category.
 	 *
@@ -118,5 +132,9 @@ public class Category {
 	 */
 	public void addChildCategory(Category category) {
 		children.add(category);
+	}
+	
+	public String toString() {
+		return "category#" + id;
 	}
 }

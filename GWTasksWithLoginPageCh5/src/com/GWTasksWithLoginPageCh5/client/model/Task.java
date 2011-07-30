@@ -15,6 +15,7 @@ public class Task {
 	private String title;
 	private String description;
 	private Priority priority;
+	private boolean closed;
 	
 	/**
 	 * Default empty constructor.
@@ -68,8 +69,18 @@ public class Task {
 		this.title = title;
 		this.priority = priority;
 		this.description = description;
-	}
-	
+	}	
+
+    /**
+     * Copy constructor.
+     *
+     * @param task The task based on which this task will be created and initialized.
+     */
+    public Task(Task task) {
+        this(task.getId(), task.getTitle(), task.getPriority(), task.getDescription());
+        setClosed(task.isClosed());
+    }
+    
 	/**
 	 * Returns the id of this task.
 	 *
@@ -141,5 +152,23 @@ public class Task {
 	public void setPriority(Priority priority) {
 		this.priority = priority;
 	}
+	
+    /**
+     * Returns whether this task is closed (checked).
+     *
+     * @return Whether this task is closed (checked).
+     */
+    public boolean isClosed() {
+        return closed;
+    }
+
+    /**
+     * Sets whether this task is closed (checked).
+     *
+     * @param closed Determines whether this task is closed (checked).
+     */
+    public void setClosed(boolean closed) {
+        this.closed = closed;
+    }
 	
 }

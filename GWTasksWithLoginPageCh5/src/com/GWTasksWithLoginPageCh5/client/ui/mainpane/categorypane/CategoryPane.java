@@ -4,24 +4,34 @@ package com.GWTasksWithLoginPageCh5.client.ui.mainpane.categorypane;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
+import com.GWTasksWithLoginPageCh5.client.manager.ManagerRegistry;
 import com.GWTasksWithLoginPageCh5.client.model.*;
 
 import java.util.*;
+
+import com.GWTasksWithLoginPageCh5.client.support.async.Callback;
 import com.GWTasksWithLoginPageCh5.client.support.widget.*;
-import com.GWTasksWithLoginPageCh5.client.ui.mainpane.taskpane.TaskPane;
+import com.GWTasksWithLoginPageCh5.client.ui.Pane;
+import com.GWTasksWithLoginPageCh5.client.ui.event.CategoryCreatedEvent;
+import com.GWTasksWithLoginPageCh5.client.ui.event.CategorySelectionEvent;
 
 /**
  * @author 
  */
-public class CategoryPane extends Composite {
+public class CategoryPane extends Pane {
 
 	private final Tree tree;
-	private final TaskPane taskPane;
 	private final PushButton addButton;
 	private final PushButton removeButton;
 
-	public CategoryPane(TaskPane taskPane) {
-		this.taskPane = taskPane;
+    /**
+     * Constructs a new CategoryPane with a given manager registry.
+     *
+     * @param managerRegistry The manager registry to associate this pane with.
+     */
+    public CategoryPane(ManagerRegistry managerRegistry) {
+        super(managerRegistry);
+
 		tree = new Tree();
 		
 		tree.addHandler(new ClickHandler() 
@@ -31,7 +41,8 @@ public class CategoryPane extends Composite {
 			{
 				TreeItem item = tree.getSelectedItem();
 				Category category = ((CategoryTreeItem)item).getCategory();
-			    CategoryPane.this.taskPane.reset(category);
+			    fireEvent(new CategorySelectionEvent(CategoryPane.this, category));
+                removeButton.setEnabled(true);
 			}
 		}, ClickEvent.getType()  );
 		
@@ -46,11 +57,11 @@ public class CategoryPane extends Composite {
 		    }
 		});*/
 		
-		List<Category> categories = getAllCategories();
+	/*	List<Category> categories = getAllCategories();
 		for (final Category category : categories) {
 			CategoryTreeItem item = createTreeItem(category);
 			tree.addItem(item);
-		}
+		}*/
 
 		TitledPanel titledPanel = new TitledPanel("Categories", tree);
 		titledPanel.setContentVerticalAlignment(HasVerticalAlignment.ALIGN_TOP);
@@ -80,7 +91,8 @@ Listing 5-32. Customizing the TitledPanel of the CategoryPane
 			@Override
 			public void onClick(ClickEvent event) 
 			{
-				CategoryFormDialogBox dialog = new CategoryFormDialogBox(CategoryPane.this);
+				 CategoryFormDialogBox dialog =
+	                        new CategoryFormDialogBox(CategoryPane.this, getManagerRegistry().getDataManager());
 				dialog.center();
 				dialog.show();
 			}
@@ -92,80 +104,86 @@ Listing 5-32. Customizing the TitledPanel of the CategoryPane
 			@Override
 			public void onClick(ClickEvent event) 
 			{
-				CategoryTreeItem item = (CategoryTreeItem) tree.getSelectedItem();
-				if (item != null) 
-				{
-					Category category = item.getCategory();
-					item.remove();
-					removeButton.setEnabled(false);
-					CategoryPane.this.taskPane.reset();
-				}
+				final CategoryTreeItem item = (CategoryTreeItem) tree.getSelectedItem();
+                if (item == null) 
+                {
+                    return;
+                }
+                Long categoryId = item.getCategory().getId();
+                getManagerRegistry().getDataManager().removeCategory(categoryId, new Callback<Void>() 
+                {
+                    public void onSuccess(Void result)
+                    {
+                        item.remove();
+                        removeButton.setEnabled(false);
+                        fireEvent(new CategorySelectionEvent(CategoryPane.this, null));
+                    }
+                });
 			}
 		});
 		
 		removeButton.setEnabled(false);
 		
 		initWidget(titledPanel);
+	    reloadCategories();
 	}	
-	
-	/**
-	 * Adds the given category to this pane. The category will be added as a child of the currently
-	 * selected category. If no category is currently selected, it will be added as a top level category.
-	 *
-	 * @param category The category to be added.
-	 */
-	public void addCategory(Category category)
-	{
-		CategoryTreeItem item = (CategoryTreeItem) tree.getSelectedItem();
-		if (item == null) 
-		{
-			tree.addItem(createTreeItem(category));
-		} 
-		else 
-		{
-			item.addItem(createTreeItem(category));
+
+    /**
+     * Adds the given category to this pane. The category will be added as a child of the currently
+     * selected category. If no category is currently selected, it will be added as a top level category.
+     *
+     * @param category The category to be added.
+     */
+    public void addCategory(Category category) {
+        final CategoryTreeItem item = (CategoryTreeItem) tree.getSelectedItem();
+        CategoryTreeItem newItem = createTreeItem(category);
+        if (item == null) {
+            tree.addItem(newItem);
+        } else {
+            item.addItem(newItem);
+        }
+        fireEvent(new CategoryCreatedEvent(CategoryPane.this, category));
+    }
+
+    //=========================================== Helper Methods =======================================================
+
+    protected CategoryTreeItem createTreeItem(Category category) {
+        CategoryTreeItem item = new CategoryTreeItem(category);
+        for (Category child : category.getChildren()) {
+            item.addItem(createTreeItem(child));
+        }
+        return item;
+    }
+
+    protected void reloadCategories() {
+        getManagerRegistry().getDataManager().getCategories(new Callback<List<Category>>() {
+            public void onSuccess(List<Category> categories) {
+                for (final Category category : categories) {
+                    CategoryTreeItem item = createTreeItem(category);
+                    tree.addItem(item);
+                }
+            }
+        });
+    }
+
+    public Category getSelectedCategory() {
+        CategoryTreeItem item = (CategoryTreeItem) tree.getSelectedItem();
+        return item != null ? item.getCategory() : null;
+    }
+
+    //============================================ Inner Classes =======================================================
+
+    protected class CategoryTreeItem extends TreeItem {
+
+        public CategoryTreeItem(Category category) {
+            super(category.getName());
+            setTitle(category.getDescription());
+            setUserObject(category);
+        }
+
+        public Category getCategory() {
+            return (Category) getUserObject();
 		}
 	}
-	//=========================================== Helper Methods =======================================================
-	
-		protected CategoryTreeItem createTreeItem(Category category) {
-			CategoryTreeItem item = new CategoryTreeItem(category);
-			for (Category child : category.getChildren()) {
-				item.addItem(createTreeItem(child));
-			}
-			return item;
-		}
-		
-		protected List<Category> getAllCategories() {
-			List<Category> categories = new ArrayList<Category>();
-			
-			Category work = new Category(1L, "Work", "Things at work");
-			work.addChildCategory(new Category(2L, "Calls", "Make phone calls"));
-			work.addChildCategory(new Category(3L, "Meetings", "People I need to meet with"));
-			categories.add(work);
-			Category home = new Category(4L, "Home", "Things at home");
-			home.addChildCategory(new Category(5L, "Shoppings", "Things I need to buy"));
-			home.addChildCategory(new Category(6L, "Bills", "Bills I need to sort"));
-			categories.add(home);
-			categories.add(new Category(3L, "Others", "Other things I need to do"));
-			return categories;
-		}
-		
-		
-		//============================================ Inner Classes =======================================================
-		
-		protected class CategoryTreeItem extends TreeItem {
-			
-			public CategoryTreeItem(Category category) {
-				super(category.getName());
-				setTitle(category.getDescription());
-				setUserObject(category);
-			}
-			
-			public Category getCategory() {
-				return (Category) getUserObject();
-			}
-		}
 
-	}
-
+}

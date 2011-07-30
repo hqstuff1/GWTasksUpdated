@@ -3,7 +3,9 @@ package com.GWTasksWithLoginPageCh5.client.ui.loginpane;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
+import com.GWTasksWithLoginPageCh5.client.manager.security.MySecurityManager;
 import com.GWTasksWithLoginPageCh5.client.model.*;
+import com.GWTasksWithLoginPageCh5.client.support.async.Callback;
 
 
 public class RegistrationFormDialogBox extends DialogBox {
@@ -26,11 +28,15 @@ public class RegistrationFormDialogBox extends DialogBox {
     private Image retypePasswordErrorImage;
     
     private LoginPane loginPane;
+    private final MySecurityManager securityManager;
     
-    public RegistrationFormDialogBox(LoginPane loginPane) {
-    	super(false, true);
+    public RegistrationFormDialogBox(LoginPane loginPane, MySecurityManager securityManager )
+    {
+      	super(false, true);
     	this.loginPane = loginPane;
-		setText("Login");
+		this.securityManager = securityManager;
+
+        setText("Login");
 		    	
     	VerticalPanel main = new VerticalPanel();
     	main.setWidth("200px");
@@ -146,9 +152,13 @@ public class RegistrationFormDialogBox extends DialogBox {
                     emailField.getText(),
                     usernameField.getText(),
                     passwordField.getText());
-            // creating an account
-            loginPane.showInfoMessage("Account was created successfully" + account);
-            hide();
+
+            securityManager.createAccount(account, new Callback<Account>() {
+                public void onSuccess(Account result) {
+                    loginPane.showInfoMessage("Account was created successfully");
+                    hide();
+                }
+            });
         }
     }
 

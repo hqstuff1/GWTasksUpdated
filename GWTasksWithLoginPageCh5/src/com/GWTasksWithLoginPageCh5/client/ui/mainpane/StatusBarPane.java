@@ -3,25 +3,37 @@
 package com.GWTasksWithLoginPageCh5.client.ui.mainpane;
 
 
+import com.GWTasksWithLoginPageCh5.client.manager.ManagerRegistry;
+import com.GWTasksWithLoginPageCh5.client.ui.Pane;
 import com.google.gwt.user.client.ui.*;
 
 
 /**
  * The status bar of the GWTasks application.
  *
- * @author 
+ * @author
  */
-public class StatusBarPane extends Composite {
+public class StatusBarPane extends Pane {
 
 	private final Label messageLabel;
-	
-	public StatusBarPane() {
+
+    /**
+     * Constructs a new StatusBarPane with a given manager registry.
+     *
+     * @param managerRegistry The manager registry to associate with this pane.
+     */
+	public StatusBarPane(ManagerRegistry managerRegistry) {
+        super(managerRegistry);
 		messageLabel = new Label();
-		initWidget(messageLabel);  //the label  is wrapped by the composite
+        messageLabel.setStyleName("MessageLabel");
+		initWidget(messageLabel);
+        setStyleName("StatusBarPane");
 	}
 	
 	/**
 	 * Sets the message to be displayed in this status bar.
+     *
+     * @param message The message to be displayed in this status bar.
 	 */
 	public void setMessage(String message) {
 		messageLabel.setText(message);

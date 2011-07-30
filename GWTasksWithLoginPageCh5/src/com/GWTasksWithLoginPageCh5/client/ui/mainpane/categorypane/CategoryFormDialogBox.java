@@ -1,7 +1,9 @@
 
 package com.GWTasksWithLoginPageCh5.client.ui.mainpane.categorypane;
 
+import com.GWTasksWithLoginPageCh5.client.manager.data.DataManager;
 import com.GWTasksWithLoginPageCh5.client.model.Category;
+import com.GWTasksWithLoginPageCh5.client.support.async.Callback;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
@@ -13,32 +15,33 @@ public class CategoryFormDialogBox extends DialogBox {
 
 	private final static String ERROR_IMAGE_URL = "image/field-error.gif";
 
-	// will determine the id of new categories (should be removed when integrating with data managers)
-	private static long id = 10;
-	
     private final TextBox nameField;
     private final Image nameErrorImage;
     private final TextArea descriptionField;
     private final Button submitButton;
     private final Button cancelButton;
 
+    private final boolean editMode;
     private final Category category;
     private final CategoryPane categoryPane;
+    private final DataManager dataManager;
 
-    public CategoryFormDialogBox(CategoryPane categoryPane) {
-        this(categoryPane, new Category(), false);
+    public CategoryFormDialogBox(CategoryPane categoryPane, DataManager dataManager) {
+        this(categoryPane, dataManager, new Category(), false);
     }
 
-    public CategoryFormDialogBox(CategoryPane categoryPane, Category category) {
-        this(categoryPane, category, true);
+    public CategoryFormDialogBox(CategoryPane categoryPane, DataManager dataManager, Category category) {
+        this(categoryPane, dataManager, category, true);
     }
 
-    private CategoryFormDialogBox(CategoryPane categoryPane, Category category, boolean editMode) {
+    private CategoryFormDialogBox(CategoryPane categoryPane, DataManager dataManager, Category category, boolean editMode) {
         super(false, true);
         setText("Category Form");
         this.category = category;
 		this.categoryPane = categoryPane;
-		
+        this.dataManager = dataManager;
+		this.editMode = editMode;
+
         VerticalPanel main = new VerticalPanel();
         main.add(new Label("Name"));
         addGap(main, "3px");
@@ -62,6 +65,7 @@ public class CategoryFormDialogBox extends DialogBox {
         main.add(descriptionField);
         addGap(main, "10px");
 
+//----
         HorizontalPanel buttons = new HorizontalPanel();
         submitButton = new Button(editMode ? "Edit" : "Add");
         submitButton.addClickHandler(new ClickHandler()
@@ -95,18 +99,38 @@ public class CategoryFormDialogBox extends DialogBox {
         content.setStyleName("DialogContent");
         setWidget(content);
     }
-    
 
     //============================================== Helper Methods ====================================================
 
     protected void handleSubmit() {
         if (validate()) {
-			category.setId(id++);
             category.setName(nameField.getText().trim());
             category.setDescription(descriptionField.getText().trim());
-            categoryPane.addCategory(category);
-            hide();
+            if (editMode) {
+                handleUpdate(category);
+            } else {
+                handleCreate(category);
+            }
         }
+    }
+
+    protected void handleCreate(Category category) {
+        Category selectedCategory = categoryPane.getSelectedCategory();
+        Long parentCategoryId = selectedCategory == null ? null : selectedCategory.getId();
+        dataManager.createCategory(category, parentCategoryId, new Callback<Category>() {
+            public void onSuccess(Category category) {
+                categoryPane.addCategory(category);
+                hide();
+            }
+        });
+    }
+
+    protected void handleUpdate(Category category) {
+        dataManager.updateCategory(category, new Callback<Void>() {
+            public void onSuccess(Void result) {
+                categoryPane.reloadCategories();
+            }
+        });
     }
 
     protected void handleCancel() {
@@ -136,3 +160,6 @@ public class CategoryFormDialogBox extends DialogBox {
     }
 
 }
+   
+
+ 
